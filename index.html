@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ImageForge — AI Image Generator</title>
+<meta name="description" content="Generate AI images instantly. Free, no signup, no API key.">
+<meta name="theme-color" content="#0f0f14">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ImageForge">
+<style>
+:root{--bg:#0f0f14;--sf:#1a1a24;--cd:#22222f;--bd:#2e2e3e;--ac:#7c5cfc;--a2:#c084fc;--tx:#e8e8f0;--mu:#8888a8}
+[data-theme=light]{--bg:#f0eff8;--sf:#fff;--cd:#f7f6ff;--bd:#dddaf5;--ac:#6d48f7;--a2:#a855f7;--tx:#1a1828;--mu:#6b6890}
+[data-theme=oled]{--bg:#000;--sf:#080808;--cd:#101010;--bd:#1c1c1c;--ac:#9d7bff;--a2:#d09dff;--tx:#f0f0f8;--mu:#777799}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column;transition:background .3s,color .3s}
+header{background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99}
+.logo{font-size:1.2rem;font-weight:900;background:linear-gradient(135deg,var(--ac),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo em{font-weight:400;font-style:normal;font-size:.8rem;-webkit-text-fill-color:var(--mu)}
+.trow{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.tb{border:1.5px solid var(--bd);background:var(--cd);color:var(--mu);border-radius:8px;padding:5px 9px;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s}
+.tb.on,.tb:hover{border-color:var(--ac);color:var(--ac)}
+main{flex:1;padding:20px 14px 36px;max-width:660px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:18px}
+.hero{text-align:center;padding:6px 0}
+.hero h1{font-size:clamp(1.5rem,5vw,2.2rem);font-weight:900;background:linear-gradient(135deg,var(--ac),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
+.hero p{color:var(--mu);font-size:.85rem;margin-top:5px}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px}
+label{display:block;font-size:.75rem;font-weight:700;color:var(--mu);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+textarea{width:100%;background:var(--cd);border:1.5px solid var(--bd);border-radius:10px;color:var(--tx);font-family:inherit;font-size:.93rem;padding:11px 13px;resize:vertical;min-height:84px;outline:none;transition:border-color .2s;line-height:1.5}
+textarea:focus{border-color:var(--ac)}
+textarea::placeholder{color:var(--mu)}
+.row{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}
+select{flex:1;min-width:110px;background:var(--cd);border:1.5px solid var(--bd);border-radius:10px;color:var(--tx);font-family:inherit;font-size:.85rem;padding:8px 32px 8px 11px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238888a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+select option{background:var(--sf)}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px;margin-top:12px}
+.sc{background:var(--cd);border:1.5px solid var(--bd);border-radius:9px;padding:8px 5px;text-align:center;font-size:.73rem;font-weight:600;color:var(--mu);cursor:pointer;transition:all .2s}
+.sc.on,.sc:hover{border-color:var(--ac);color:var(--ac)}
+.tips{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px}
+.tc{background:var(--cd);border:1px solid var(--bd);border-radius:20px;padding:4px 10px;font-size:.72rem;color:var(--mu);cursor:pointer;transition:all .2s}
+.tc:hover{border-color:var(--ac);color:var(--ac)}
+.gbtn{width:100%;margin-top:14px;padding:13px;background:linear-gradient(135deg,var(--ac),var(--a2));color:#fff;border:none;border-radius:12px;font-size:.97rem;font-weight:700;cursor:pointer;transition:opacity .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.gbtn:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.gbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.out{display:none;flex-direction:column;gap:12px}
+.out.on{display:flex}
+.iw{position:relative;border-radius:14px;overflow:hidden;background:var(--cd);border:1px solid var(--bd);min-height:240px;display:flex;align-items:center;justify-content:center}
+.iw img{width:100%;display:block;border-radius:14px;transition:opacity .5s}
+.sk{position:absolute;inset:0;background:linear-gradient(90deg,var(--cd) 25%,var(--bd) 50%,var(--cd) 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:14px;pointer-events:none}
+@keyframes sh{to{background-position:-200% 0}}
+.ll{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.78);color:#fff;font-size:.76rem;font-weight:600;padding:6px 16px;border-radius:20px;backdrop-filter:blur(8px);white-space:nowrap;pointer-events:none}
+.ia{display:flex;gap:9px}
+.bs{flex:1;padding:10px;background:var(--cd);border:1.5px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;text-decoration:none}
+.bs:hover{border-color:var(--ac);color:var(--ac)}
+.gal{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.gi{border-radius:10px;overflow:hidden;border:1px solid var(--bd);cursor:pointer;transition:transform .2s,border-color .2s;position:relative;background:var(--cd)}
+.gi:hover{transform:scale(1.02);border-color:var(--ac)}
+.gi img{width:100%;display:block}
+.gl{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.8));color:#fff;font-size:.67rem;padding:16px 7px 6px;line-height:1.3}
+.err{border-radius:10px;padding:11px 13px;font-size:.85rem;display:none;line-height:1.6}
+.err.on{display:block}
+.err.fail{background:#2d1515;border:1px solid #5a1f1f;color:#ff8080}
+.err.info{background:#12202d;border:1px solid #1e4060;color:#7ec8f0}
+.stl{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mu);margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+footer{text-align:center;padding:20px 14px;border-top:1px solid var(--bd);color:var(--mu);font-size:.75rem;line-height:1.8;background:var(--sf)}
+footer a{color:var(--ac);text-decoration:none}
+@media(min-width:480px){.gal{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body data-theme="dark">
+<header>
+  <div class="logo">ImageForge <em>AI</em></div>
+  <div class="trow">
+    <button class="tb on" onclick="setT('dark',this)">Dark</button>
+    <button class="tb" onclick="setT('light',this)">Light</button>
+    <button class="tb" onclick="setT('oled',this)">OLED</button>
+    <button class="tb" id="installBtn" onclick="installApp()" style="display:none">⬇ Install</button>
+  </div>
+</header>
+<main>
+  <div class="hero">
+    <h1>Generate Any Image<br>Instantly. Free.</h1>
+    <p>Type a prompt, pick a style, generate.</p>
+  </div>
+  <div class="card">
+    <label>Describe your image</label>
+    <textarea id="prompt" placeholder="A samurai in cherry blossom rain, cinematic lighting, ultra detailed..."></textarea>
+    <div class="tips" id="tipRow"></div>
+    <div class="row">
+      <select id="sz">
+        <option value="512x512">512 × 512</option>
+        <option value="768x512">768 × 512 Wide</option>
+        <option value="512x768">512 × 768 Portrait</option>
+        <option value="1024x576" selected>1024 × 576 HD</option>
+        <option value="1024x1024">1024 × 1024 Square</option>
+      </select>
+      <select id="md">
+        <option value="flux" selected>Flux</option>
+        <option value="flux-realism">Flux Realism</option>
+        <option value="flux-anime">Flux Anime</option>
+        <option value="flux-3d">Flux 3D</option>
+        <option value="turbo">Turbo (Fast)</option>
+      </select>
+    </div>
+    <div class="stl" style="margin-top:14px">Style Presets</div>
+    <div class="sg" id="sg"></div>
+    <button class="gbtn" id="gb" onclick="gen()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Generate Image
+    </button>
+  </div>
+  <div class="err" id="err"></div>
+  <div class="out" id="out">
+    <div class="iw" id="iw">
+      <div class="sk" id="sk"></div>
+      <div class="ll" id="ll">✦ Generating… 0s</div>
+    </div>
+    <div class="ia" id="ia" style="display:none">
+      <button class="bs" onclick="downloadImg()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download
+      </button>
+      <button class="bs" onclick="copyP()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Prompt
+      </button>
+      <button class="bs" onclick="gen()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Retry
+      </button>
+    </div>
+  </div>
+  <div class="card" id="gc" style="display:none">
+    <div class="stl">Recent Generations</div>
+    <div class="gal" id="gal"></div>
+  </div>
+</main>
+<footer>
+  ImageForge — Free AI Image Generator<br>
+  © <span id="yr"></span> Manik Roy. All Rights Reserved.
+</footer>
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+function setT(t, el) {
+  document.body.setAttribute('data-theme', t);
+  document.querySelectorAll('.tb').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+const SY = [
+  ['🎨 Realistic','photorealistic, 8k ultra detail, DSLR photography'],
+  ['🖌️ Oil Paint','oil painting, impressionist, textured brushstrokes'],
+  ['🌸 Anime','anime style, studio ghibli, soft pastel colors'],
+  ['🌆 Cyberpunk','cyberpunk, neon lights, rain reflections, futuristic'],
+  ['🖼️ Watercolor','watercolor illustration, soft wash, dreamy aesthetic'],
+  ['🤖 3D Render','octane render, 3D CGI, ray tracing, studio lighting'],
+  ['✏️ Sketch','pencil sketch, fine line art, black and white'],
+  ['🌌 Fantasy','epic fantasy, magical atmosphere, luminous ethereal'],
+  ['📸 Portrait','portrait photography, shallow depth, golden hour bokeh'],
+  ['👾 Pixel Art','pixel art, 16-bit retro game style, vibrant palette'],
+];
+
+let aS = null;
+SY.forEach(([l], i) => {
+  const el = document.createElement('div');
+  el.className = 'sc'; el.textContent = l;
+  el.onclick = () => { aS = aS===i ? null : i; document.querySelectorAll('.sc').forEach((c,j)=>c.classList.toggle('on',j===aS)); };
+  document.getElementById('sg').appendChild(el);
+});
+
+['Golden hour','Cinematic','Macro shot','Dramatic','Misty','Surreal','Vibrant','Minimal'].forEach(t => {
+  const el = document.createElement('span');
+  el.className = 'tc'; el.textContent = t;
+  el.onclick = () => { const ta=document.getElementById('prompt'); ta.value=ta.value?ta.value+', '+t.toLowerCase():t.toLowerCase(); ta.focus(); };
+  document.getElementById('tipRow').appendChild(el);
+});
+
+let hist = [], tickT = null, elapsed = 0, currentUrl = null;
+
+function addH(url, lab) { hist.unshift({url,lab}); if(hist.length>6) hist.pop(); renderH(); }
+function renderH() {
+  const c = document.getElementById('gc');
+  if (!hist.length) { c.style.display='none'; return; }
+  c.style.display = '';
+  document.getElementById('gal').innerHTML = hist.map((h,i) =>
+    `<div class="gi" onclick="loadG(${i})"><img src="${h.url}" loading="lazy"><div class="gl">${h.lab}</div></div>`
+  ).join('');
+}
+function loadG(i) { revealImg(hist[i].url, hist[i].lab); }
+
+function setBtn(on) {
+  const b = document.getElementById('gb'); b.disabled = on;
+  b.innerHTML = on
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating…'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Image';
+}
+function showErr(m, type='fail') {
+  const e=document.getElementById('err');
+  e.className='err on '+(type==='info'?'info':'fail');
+  e.innerHTML=m;
+}
+function hideErr() { document.getElementById('err').classList.remove('on'); }
+function startTick() {
+  elapsed=0;
+  tickT=setInterval(()=>{ elapsed++; const ll=document.getElementById('ll'); if(ll) ll.textContent=`✦ Generating… ${elapsed}s`; },1000);
+}
+function stopTick() { if(tickT){clearInterval(tickT);tickT=null;} }
+
+function revealImg(url, label) {
+  stopTick();
+  const iw=document.getElementById('iw');
+  const old=iw.querySelector('img'); if(old) old.remove();
+  document.getElementById('sk').style.display='none';
+  document.getElementById('ll').style.display='none';
+  const img=document.createElement('img');
+  img.alt=label; img.style.opacity='0'; img.style.transition='opacity 0.5s';
+  img.src=url; iw.appendChild(img);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ img.style.opacity='1'; }));
+  currentUrl=url;
+  document.getElementById('ia').style.display='flex';
+  setBtn(false);
+}
+
+function downloadImg() {
+  if (!currentUrl) return;
+  // Try a same-tab download attribute first; if the browser blocks cross-origin
+  // download attributes, it will just open the image in a new tab instead —
+  // from there the user can long-press / right-click → Save Image.
+  const a = document.createElement('a');
+  a.href = currentUrl;
+  a.download = 'imageforge-' + Date.now() + '.png';
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+function copyP() {
+  navigator.clipboard.writeText(document.getElementById('prompt').value).catch(()=>{});
+  const b=event.currentTarget,o=b.innerHTML; b.innerHTML='✓ Copied!'; setTimeout(()=>b.innerHTML=o,1800);
+}
+
+// ── Core: plain <img src> pointed straight at Pollinations ───────────────────
+// No fetch(), no proxy, no API calls. This is the standard, correct way to use
+// Pollinations.ai. It works in any normal browser. (It will NOT render inside
+// Claude.ai's in-chat artifact preview, which sandboxes all third-party network
+// requests — open this file directly in a browser, or host it, to see images.)
+function gen() {
+  const raw = document.getElementById('prompt').value.trim();
+  if (!raw) { showErr('⚠ Please enter a prompt first!'); return; }
+  hideErr();
+  stopTick();
+
+  const extra = aS !== null ? ', ' + SY[aS][1] : '';
+  const fp = raw + extra;
+  const [w, h] = document.getElementById('sz').value.split('x');
+  const model = document.getElementById('md').value;
+  const seed = Math.floor(Math.random() * 999999);
+  const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fp)}?width=${w}&height=${h}&model=${model}&seed=${seed}`;
+
+  setBtn(true);
+  document.getElementById('out').classList.add('on');
+  document.getElementById('sk').style.display='';
+  const ll=document.getElementById('ll'); ll.style.display=''; ll.textContent='✦ Generating… 0s';
+  document.getElementById('ia').style.display='none';
+  const old=document.getElementById('iw').querySelector('img'); if(old) old.remove();
+  startTick();
+
+  const label = raw.slice(0,55)+(raw.length>55?'…':'');
+  const img = new Image();
+  img.onload = () => {
+    revealImg(imgUrl, label);
+    addH(imgUrl, raw.slice(0,48)+(raw.length>48?'…':''));
+  };
+  img.onerror = () => {
+    stopTick(); setBtn(false);
+    document.getElementById('sk').style.display='none';
+    document.getElementById('ll').style.display='none';
+    showErr('⚠ Could not reach Pollinations. Check your internet connection, or try the Turbo model.');
+  };
+  img.src = imgUrl;
+}
+
+document.getElementById('prompt').addEventListener('keydown', e => {
+  if (e.key==='Enter' && (e.ctrlKey||e.metaKey)) gen();
+});
+
+// ── PWA: service worker registration ──────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+
+// ── PWA: install prompt handling ──────────────────────────────────────────
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstall = e;
+  document.getElementById('installBtn').style.display = '';
+});
+function installApp() {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(() => {
+    deferredInstall = null;
+    document.getElementById('installBtn').style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBtn').style.display = 'none';
+});
+</script>
+</body>
+</html>
